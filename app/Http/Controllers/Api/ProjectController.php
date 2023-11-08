@@ -3,18 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\ProjectResource;
-use Illuminate\Support\Facades\Auth;
+use App\Contracts\ProjectServiceInterface;
 use App\Http\Controllers\Controller;
-use App\Models\Project;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    protected $projectService;
+
+    public function __construct(ProjectServiceInterface $projectService)
+    {
+        $this->projectService = $projectService;
+    }
+
     public function index()
     {
-        $projects = Project::all();
+        $projects = $this->projectService->getAllProjects();
         return ProjectResource::collection($projects);
-
     }
 
     public function store(Request $request)
@@ -26,16 +31,17 @@ class ProjectController extends Controller
             'deadline' => 'required|date',
         ]);
 
-        $project = Project::create($validatedData);
+        $project = $this->projectService->createProject($validatedData);
         return new ProjectResource($project);
     }
 
-    public function show(Project $project)
+    public function show($id)
     {
+        $project = $this->projectService->getProjectById($id);
         return new ProjectResource($project);
     }
 
-    public function update(Request $request, Project $project)
+    public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -44,26 +50,19 @@ class ProjectController extends Controller
             'deadline' => 'sometimes|date',
         ]);
 
-        $project->update($validatedData);
+        $project = $this->projectService->updateProject($id, $validatedData);
         return new ProjectResource($project);
     }
 
-    public function destroy(Project $project)
+    public function destroy($id)
     {
-        $project->delete();
+        $this->projectService->deleteProject($id);
         return response()->json(null, 204);
     }
 
     public function statistics()
     {
-        $totalProjects = Project::count();
-        $completedTasks = Task::where('status', 'completed')->count();
-        $totalTasks = Task::count();
-
-        return response()->json([
-            'total_projects' => $totalProjects,
-            'completed_tasks' => $completedTasks,
-            'total_tasks' => $totalTasks,
-        ]);
+        $statistics = $this->projectService->getProjectStatistics();
+        return response()->json($statistics);
     }
 }

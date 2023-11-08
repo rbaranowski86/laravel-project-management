@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\TaskServiceInterface;
 use App\Http\Resources\TaskResource;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use App\Models\Task;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    protected $taskService;
+
+    public function __construct(TaskServiceInterface $taskService)
+    {
+        $this->taskService = $taskService;
+    }
+
     public function index()
     {
-        $tasks = Task::all();
+        $tasks = $this->taskService->getAllTasks();
         return TaskResource::collection($tasks);
     }
 
@@ -27,17 +32,17 @@ class TaskController extends Controller
             'project_id' => 'required|exists:projects,id',
         ]);
 
-        $task = Task::create($validatedData);
+        $task = $this->taskService->createTask($validatedData);
         return new TaskResource($task);
-
     }
 
-    public function show(Task $task)
+    public function show($id)
     {
+        $task = $this->taskService->getTaskById($id);
         return new TaskResource($task);
     }
 
-    public function update(Request $request, Task $task)
+    public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -47,26 +52,23 @@ class TaskController extends Controller
             'project_id' => 'sometimes|exists:projects,id',
         ]);
 
-        $task->update($validatedData);
+        $task = $this->taskService->updateTask($id, $validatedData);
         return new TaskResource($task);
     }
 
-    public function destroy(Task $task)
+    public function destroy($id)
     {
-        $task->delete();
+        $this->taskService->deleteTask($id);
         return response()->json(null, 204);
     }
-    public function assign(Request $request, Task $task)
+
+    public function assign(Request $request, $taskId)
     {
-        $userId = $request->input('user_id', Auth::id());
-        $user = User::findOrFail($userId);
-
-        $task->user_id = $user->id;
-        $task->save();
-
+        $userId = $request->input('user_id');
+        $task = $this->taskService->assignTask($taskId, $userId);
         return response()->json([
             'message' => 'Task assigned successfully.',
-            'task' => $task
+            'task' => new TaskResource($task)
         ]);
     }
 }
