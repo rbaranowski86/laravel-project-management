@@ -18,5 +18,3 @@ use App\Http\Controllers\TaskController;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::resource('projects', ProjectController::class);
-Route::resource('tasks', TaskController::class);
