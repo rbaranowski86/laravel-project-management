@@ -20,7 +20,10 @@ use App\Http\Controllers\Api\TaskController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::apiResource('projects', ProjectController::class);
+Route::apiResource('projects', ProjectController::class)->except(['show']);
+Route::get('projects/{project}', [ProjectController::class, 'show'])
+    ->middleware('checkProjectDeadline');
+
 Route::apiResource('tasks', TaskController::class);
 Route::post('/tasks/{task}/assign/{user?}', [TaskController::class, 'assign'])->name('tasks.assign');
 Route::get('projects/statistics', [ProjectController::class, 'statistics']);

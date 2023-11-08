@@ -82,14 +82,14 @@ class ProjectTest extends TestCase
     public function it_can_show_project_statistics()
     {
         // Arrange
-        $user = User::factory()->create(); // This creates a new user and persists it to the database
-        $project = Project::factory()->create(); // Ensure a project exists for the task
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
 
         $taskData = [
             'title' => 'New Task',
             'description' => 'Task Description',
             'status' => 'pending',
-            'user_id' => $user->id, // Assign the created user's ID here
+            'user_id' => $user->id,
             'project_id' => $project->id,
         ];
 
@@ -101,6 +101,40 @@ class ProjectTest extends TestCase
         $this->assertDatabaseHas('tasks', [
             'title' => 'New Task',
             'user_id' => $user->id,
+        ]);
+    }
+
+    /** @test */
+    public function project_with_future_deadline_is_not_marked_completed()
+    {
+        $project = Project::factory()->create([
+            'deadline' => now()->addDays(10), // 10 days in the future
+            'status' => 'in-progress',
+        ]);
+
+        $response = $this->getJson("/api/projects/{$project->id}");
+
+        $project->refresh();
+        $this->assertEquals('in-progress', $project->status);
+
+        $response->assertOk();
+    }
+
+    /** @test */
+    public function project_with_past_deadline_is_marked_completed_and_returns_error()
+    {
+        $project = Project::factory()->create([
+            'deadline' => now()->subDays(1),
+            'status' => 'in-progress',
+        ]);
+
+        $response = $this->getJson("/api/projects/{$project->id}");
+
+        $project->refresh();
+        $this->assertEquals('completed', $project->status);
+        $response->assertStatus(403);
+        $response->assertJson([
+            'message' => 'The project deadline has passed and it has been marked as completed.'
         ]);
     }
 }
