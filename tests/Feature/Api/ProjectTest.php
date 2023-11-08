@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Project;
-use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -13,6 +12,16 @@ use Tests\TestCase;
 class ProjectTest extends TestCase
 {
     use WithFaker, RefreshDatabase;
+
+    protected $user;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user, 'api');
+    }
 
     /** @test */
     public function it_can_create_a_project()
@@ -25,7 +34,10 @@ class ProjectTest extends TestCase
         ];
 
         $response = $this->postJson('/api/projects', $projectData);
-
+        if ($response->status() !== 201) {
+            dd($response->getContent());
+        }
+        $response->assertCreated();
         $response->assertCreated();
         $this->assertDatabaseHas('projects', $projectData);
     }

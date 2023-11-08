@@ -13,6 +13,15 @@ use Tests\TestCase;
 class TaskTest extends TestCase
 {
     use WithFaker, RefreshDatabase;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user, 'api');
+    }
+
     /** @test */
     public function it_can_create_a_task()
     {

@@ -17,13 +17,16 @@ use App\Http\Controllers\Api\TaskController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::apiResource('projects', ProjectController::class)->except(['show']);
-Route::get('projects/{project}', [ProjectController::class, 'show'])
-    ->middleware('checkProjectDeadline');
+Route::middleware('auth:api')->group(function () {
+    // Place all routes that require authentication here
+    Route::apiResource('projects', ProjectController::class)->except(['show']);
+    Route::get('projects/{project}', [ProjectController::class, 'show'])
+        ->middleware('checkProjectDeadline');
 
-Route::apiResource('tasks', TaskController::class);
-Route::post('/tasks/{task}/assign/{user?}', [TaskController::class, 'assign'])->name('tasks.assign');
-Route::get('projects/statistics', [ProjectController::class, 'statistics']);
+    Route::apiResource('tasks', TaskController::class);
+    Route::post('/tasks/{task}/assign/{user?}', [TaskController::class, 'assign'])->name('tasks.assign');
+    Route::get('projects/statistics', [ProjectController::class, 'statistics']);
+});

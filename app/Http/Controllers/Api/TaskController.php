@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Contracts\TaskServiceInterface;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -22,16 +24,9 @@ class TaskController extends Controller
         return TaskResource::collection($tasks);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|in:completed,in-progress,pending',
-            'user_id' => 'required|exists:users,id',
-            'project_id' => 'required|exists:projects,id',
-        ]);
-
+        $validatedData = $request->validated();
         $task = $this->taskService->createTask($validatedData);
         return new TaskResource($task);
     }
@@ -42,16 +37,9 @@ class TaskController extends Controller
         return new TaskResource($task);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateTaskRequest $request, $id)
     {
-        $validatedData = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'status' => 'sometimes|in:completed,in-progress,pending',
-            'user_id' => 'sometimes|exists:users,id',
-            'project_id' => 'sometimes|exists:projects,id',
-        ]);
-
+        $validatedData = $request->validated();
         $task = $this->taskService->updateTask($id, $validatedData);
         return new TaskResource($task);
     }

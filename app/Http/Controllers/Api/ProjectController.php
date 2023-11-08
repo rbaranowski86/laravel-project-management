@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Contracts\ProjectServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -22,16 +25,9 @@ class ProjectController extends Controller
         return ProjectResource::collection($projects);
     }
 
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'status' => 'required|in:completed,in-progress,pending',
-            'deadline' => 'required|date',
-        ]);
-
-        $project = $this->projectService->createProject($validatedData);
+        $project = $this->projectService->createProject($request->validated());
         return new ProjectResource($project);
     }
 
@@ -41,16 +37,9 @@ class ProjectController extends Controller
         return new ProjectResource($project);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateProjectRequest $request, $id)
     {
-        $validatedData = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'status' => 'sometimes|in:completed,in-progress,pending',
-            'deadline' => 'sometimes|date',
-        ]);
-
-        $project = $this->projectService->updateProject($id, $validatedData);
+        $project = $this->projectService->updateProject($id, $request->validated());
         return new ProjectResource($project);
     }
 
