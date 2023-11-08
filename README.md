@@ -1,5 +1,6 @@
-## To build the project run commands:
+## To build the project run commands on a system with php (including required extensions) and composer:
 ```shell
+composer install
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan migrate:fresh --seed 
 ./vendor/bin/sail artisan passport:install
