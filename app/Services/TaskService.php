@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\TaskServiceInterface;
+use App\Events\TaskAssigned;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -43,7 +44,11 @@ class TaskService implements TaskServiceInterface
         $userId = $userId ?? Auth::id();
         $user = User::findOrFail($userId);
         $task->user_id = $user->id;
-        $task->save();
-        return $task;
+        if($task->save()) {
+            event(new TaskAssigned($task, $user));
+            return $task;
+        }
+
+        throw new \Exception("Unable to assign task.");
     }
 }
